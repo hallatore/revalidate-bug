@@ -11,12 +11,15 @@ async function Page() {
   const json = (await response.json()) as { datetime: string };
 
   // Note: function is run twice for some reason. This is a different bug: https://github.com/vercel/next.js/issues/58736
-  console.log("datetime", json.datetime);
+  console.log("local", new Date().toLocaleTimeString());
+  console.log("fetch", json.datetime.substring(11, 19));
+  console.log("");
 
   return (
     <div>
       <h1>Time should update every 5 seconds. Not every 10.</h1>
-      <p>{json.datetime}</p>
+      <p>local: {new Date().toLocaleTimeString()}</p>
+      <p>fetch: {json.datetime.substring(11, 19)}</p>
     </div>
   );
 }
