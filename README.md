@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+NEXT revalidate bug
 
-## Getting Started
+The following code features a static page with a fetch call set to revalidate every 5 seconds. This causes the page to also revalidate every 5 seconds, as expected.
 
-First, run the development server:
+But when the page revalidates the fetch-call returns a stale response and revaldate itself, causing a revalidate chain that doubles the time it takes to refresh data, and causes extra calls.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+async function Page() {
+  const response = await fetch(
+    "http://worldtimeapi.org/api/timezone/Europe/Oslo",
+    {
+      next: {
+        revalidate: 5,
+      },
+    }
+  );
+
+  const json = (await response.json()) as { datetime: string };
+
+  // Note: function is run twice for some reason. This is a different bug: https://github.com/vercel/next.js/issues/58736
+  console.log("datetime", json.datetime);
+
+  return (
+    <div>
+      <h1>Time should update every 5 seconds. Not every 10.</h1>
+      <p>{json.datetime}</p>
+    </div>
+  );
+}
+
+export default Page;
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Diagram showing what happens
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+![image](https://github.com/hallatore/revalidate-bug/assets/365605/22d189fe-07da-47df-8b4e-f90b2d8d2ab0)
